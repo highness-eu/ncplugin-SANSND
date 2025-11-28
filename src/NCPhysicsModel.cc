@@ -422,7 +422,7 @@ double NCP::PhysicsModel::calcCrossSection(double neutron_ekin) const
         if (m_helper.has_value())
           {
             nc_assert_always(k != 0);
-            SANS_xs = 2 * NC::kPi / (k * k) * m_helper.value().calcQIofQIntegral(ekin);
+            SANS_xs = 2 * NC::kPi / (k * k) * m_helper.value().calcQIofQIntegralMin(ekin);
           }
         else
           {
