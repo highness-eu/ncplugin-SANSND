@@ -24,7 +24,8 @@
 #include "NCrystal/core/NCDefs.hh"
 
 // NVectD is defined in the NCrystal namespace; bring it into the current scope.
-using namespace NCrystal;
+using NCrystal::VectD;
+using NCrystal::RNG;
 namespace NCPluginNamespace {
 
   // Utility class which provides integration or sampling of a 1D piece-wise
