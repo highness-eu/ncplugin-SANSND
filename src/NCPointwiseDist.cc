@@ -22,6 +22,12 @@
 #include "NCrystal/internal/utils/NCMath.hh"
 #include <cstdio>
 
+using NCRystal::StableSum;
+using NCrystal::ncisinf;
+using NCrystal::ncabs;
+using NCrystal::ncclamp;
+using NCrystal::vectAt;
+
 namespace NCP = NCPluginNamespace;
 
 NCP::PointwiseDist::PointwiseDist(const VectD &xvals, const VectD &yvals)
