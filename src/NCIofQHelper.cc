@@ -21,6 +21,7 @@
 #include "NCIofQHelper.hh"
 #include "NCrystal/internal/utils/NCMath.hh"
 
+using NCrystal::ncsquare
 using NCrystal::NeutronEnergy;
 using NCrystal::ekin2ksq;
 using NCrystal::ksq2ekin;
@@ -30,7 +31,7 @@ using NCrystal::nc_is_grid;
 using NCrystal::ncisinf;
 using NCrystal::ncabs;
 using NCrystal::ncclamp;
-using NCRystal::StableSum;
+using NCrystal::StableSum;
 using NCrystal::vectAt;
 
 namespace NCP = NCPluginNamespace;
