@@ -22,7 +22,7 @@
 #include "NCrystal/internal/utils/NCMath.hh"
 #include <cstdio>
 
-using NCRystal::StableSum;
+using NCrystal::StableSum;
 using NCrystal::ncisinf;
 using NCrystal::ncabs;
 using NCrystal::ncclamp;
