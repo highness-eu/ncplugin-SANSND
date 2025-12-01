@@ -61,7 +61,7 @@ namespace NCPluginNamespace {
 
   private:
     PointwiseDist m_pwdist;
-    NeutronEnergy m_ekinMax;
+    NC::NeutronEnergy m_ekinMax;
     double m_normFact;
     double m_thetaMin;
     struct internal_t;
