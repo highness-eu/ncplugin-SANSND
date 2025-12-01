@@ -78,7 +78,7 @@ inline double NCPluginNamespace::IofQHelper::calcQIofQIntegral( NC::NeutronEnerg
 {
   if ( ekin >= m_ekinMax )
     return m_normFact;
-  constexpr double kkk = 4.0 * ekin2ksq(1.0);
+  constexpr double kkk = 4.0 * NC::ekin2ksq(1.0);
   const double twok = std::sqrt( kkk * ekin.dbl() );
   return m_pwdist.commulIntegral( twok ) * m_normFact;
 }
@@ -88,25 +88,25 @@ inline double NCPluginNamespace::IofQHelper::calcQIofQIntegralMin( NC::NeutronEn
   if ( ekin >= m_ekinMax )
     return m_normFact;
   
-  constexpr double kkk = 4.0 * ekin2ksq(1.0);
+  constexpr double kkk = 4.0 * NC::ekin2ksq(1.0);
   const double twok = std::sqrt( kkk * ekin.dbl() );
   double fullInt = m_pwdist.commulIntegral( twok ) * m_normFact;
   
-  double lowerInt = m_pwdist.commulIntegral( twok*sin(m_thetaMin) ) * m_normFact;
+  double lowerInt = m_pwdist.commulIntegral( twok*std::sin(m_thetaMin) ) * m_normFact;
   return fullInt - lowerInt;
 }
 
 inline double NCPluginNamespace::IofQHelper::sampleQValue( NC::RNG& rng, NC::NeutronEnergy ekin ) const
 {
-  constexpr double kkk = 4.0 * ekin2ksq(1.0);
+  constexpr double kkk = 4.0 * NC::ekin2ksq(1.0);
   const double twok = std::sqrt( kkk * std::min<double>(m_ekinMax.dbl(),ekin.dbl()) );
   return m_pwdist.sampleBelow( rng, twok );
 }
 inline double NCPluginNamespace::IofQHelper::sampleQValueTrunc( NC::RNG& rng, NC::NeutronEnergy ekin ) const
 {
-  constexpr double kkk = 4.0 * ekin2ksq(1.0);
+  constexpr double kkk = 4.0 * NC::ekin2ksq(1.0);
   const double twok = std::sqrt( kkk * std::min<double>(m_ekinMax.dbl(),ekin.dbl()) );
-  return m_pwdist.sampleBelowTrunc( rng, twok, twok*sin(m_thetaMin) );
+  return m_pwdist.sampleBelowTrunc( rng, twok, twok*std::sin(m_thetaMin) );
 }
 
 #endif
