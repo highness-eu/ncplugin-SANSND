@@ -5,17 +5,9 @@
 #include "NCrystal/NCPluginBoilerplate.hh"//Common stuff (includes NCrystal
                                           //public API headers, sets up
                                           //namespaces and aliases)
-#include "NCrystal/internal/phys_utils/NCIofQHelper.hh"
+#include "NCIofQHelper.hh"
 
 namespace NCPluginNamespace {
-
-  //We implement the actual physics model in this completely custom C++ helper
-  //class. That decouples it from NCrystal interfaces (which is nice in case the
-  //NCrystal API changes at some point), and it makes it easy to directly
-  //instantiate and test the modelling implementation from standalone C++ code.
-  //
-  //We mark the class as MoveOnly, to make sure it doesn't get copied around by
-  //accident (since it could easily end up having large data members).
 
   class PhysicsModel final : public NC::MoveOnly {
   public:
@@ -47,7 +39,7 @@ namespace NCPluginNamespace {
     //Data members:
     Model m_model;
     NC::Optional<NC::VectD> m_param;
-    NC::Optional<NC::IofQHelper> m_helper;
+    NC::Optional<NCP::IofQHelper> m_helper;
   };
 
 }

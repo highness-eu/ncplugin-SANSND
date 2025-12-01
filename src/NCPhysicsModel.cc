@@ -17,6 +17,7 @@
 #  define NCPLUGIN_MSG(msg) NCRYSTAL_RAWOUT( "plugin::" NCPLUGIN_NAME_CSTR ": " << msg << '\n' )
 #endif
 
+
 bool NCP::PhysicsModel::isApplicable(const NC::Info &info)
 {
   // Accept if input is NCMAT data with @CUSTOM_SANSND section:
@@ -140,10 +141,16 @@ NCP::PhysicsModel NCP::PhysicsModel::createFromInfo(const NC::Info &info)
   } else if (data.at(1).at(0) == "HSFBA") {
     NCPLUGIN_MSG("Mode HSFBA selected");
     Model model = Model::HSFBA;
-    double R;
-    if (NC::safe_str2dbl(data.at(2).at(0), R)) {
+    double R, thetaMin;
+    if (NC::safe_str2dbl(data.at(2).at(0), R)
+        && NC::safe_str2dbl(data.at(3).at(0), thetaMin)) {
       nc_assert_always(R > 0);
+      nc_assert_always(thetaMin >= 0);
+      if (thetaMin>0){
+        NCPLUGIN_WARN("Theta min is >0. Do not use this in cases where multiple scattering is not negligible, or the geometrical layout not completely certain")
+      }
       param.push_back(R);
+      param.push_back(thetaMin);
       return PhysicsModel(model, param);
     } else {
       std::string filename = data.at(2).at(0);
@@ -167,7 +174,7 @@ NCP::PhysicsModel NCP::PhysicsModel::createFromInfo(const NC::Info &info)
 
 NCP::PhysicsModel::PhysicsModel(Model model, std::string filename)
   : m_model(model),
-    m_helper(([model, filename]() -> NC::IofQHelper
+    m_helper(([model, filename]() -> NCP::IofQHelper
     {
       NC::VectD q;
       NC::VectD IofQ;
@@ -246,7 +253,7 @@ NCP::PhysicsModel::PhysicsModel(Model model, std::string filename)
           break;
         }
       }
-      NC::IofQHelper helper(q,IofQ);
+      NCP::IofQHelper helper(q,IofQ);
       return helper;
     })())
 {
@@ -257,10 +264,11 @@ NCP::PhysicsModel::PhysicsModel(Model model, std::string filename)
 NCP::PhysicsModel::PhysicsModel(Model model, NC::VectD param)
   : m_model(model),
     m_param(param),
-    m_helper(([model, param]() -> NC::IofQHelper
+    m_helper(([model, param]() -> NCP::IofQHelper
     {
       NC::VectD q;
       NC::VectD IofQ;
+      double thetaMin = 0;
       switch(model)
         {
         case Model::GPF:
@@ -346,8 +354,9 @@ NCP::PhysicsModel::PhysicsModel(Model model, NC::VectD param)
           }
         case Model::HSFBA:
           {
-            nc_assert_always(param.size()==1);
+            nc_assert_always(param.size()==2);
             double mono_R = param.at(0);
+            thetaMin = param.at(1);
             double q_min = std::log10(1e-6);
             int sampling =  std::abs(1-q_min)*10000;
             q = NC::logspace(q_min,1,sampling);
@@ -376,7 +385,7 @@ NCP::PhysicsModel::PhysicsModel(Model model, NC::VectD param)
 
         }
       //Initialize the helper
-      NC::IofQHelper helper(q,IofQ);
+      NCP::IofQHelper helper(q,IofQ,thetaMin);
       return helper; })())
 {
   // NCPLUGIN_MSG("call to constructor for 1 and 2");
@@ -487,7 +496,7 @@ double NCP::PhysicsModel::sampleScatteringVector(NC::RNG &rng, double neutron_ek
         if (m_helper.has_value())
           {
             NC::NeutronEnergy ekin(neutron_ekin);
-            Q = m_helper.value().sampleQValue(rng, ekin);
+            Q = m_helper.value().sampleQValueTrunc(rng, ekin);
           }
         else
           {
