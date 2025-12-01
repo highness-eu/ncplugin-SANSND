@@ -24,7 +24,7 @@
 #include "NCrystal/core/NCTypes.hh"
 #include "NCPointwiseDist.hh"
 
-using namespace NCrystal;
+namespace NC = NCrystal;
 
 namespace NCPluginNamespace {
 
@@ -42,19 +42,19 @@ namespace NCPluginNamespace {
     //theta min feature
     //The class is constructed from Q and I(Q) values:
 
-    IofQHelper( const VectD& Q, const VectD& IofQ, double thetaMin = 0);
+    IofQHelper( const NC::VectD& Q, const NC::VectD& IofQ, double thetaMin = 0);
     //Calculate the integral of Q*I(Q) from Q=0 to Qmax=2k, where k is the
     //wavenumber of the neutron of the provided energy. Note that to convert it
     //to a cross section one must still multiply it with a factor of c/E where c
     //is an appropriate constant and E is the neutron energy:
-    double calcQIofQIntegral( NeutronEnergy ) const;
+    double calcQIofQIntegral( NC::NeutronEnergy ) const;
     //Calculate the integral of Q*I(Q) from Q=2k*sin(theta_min) to Qmax=2k
-    double calcQIofQIntegralMin( NeutronEnergy ) const;
+    double calcQIofQIntegralMin( NC::NeutronEnergy ) const;
 
     //Sample a Q value according to Q*I(Q) over the interval from Q=0 to
     //Qmax=2k, where k is the wavenumber of the neutron of the provided energy:
-    double sampleQValue( RNG&, NeutronEnergy ) const;
-    double sampleQValueTrunc( RNG&, NeutronEnergy ) const;
+    double sampleQValue( NC::RNG&, NC::NeutronEnergy ) const;
+    double sampleQValueTrunc( NC::RNG&, NC::NeutronEnergy ) const;
 
     //QMax value:
     double getQMax() const;
@@ -74,7 +74,7 @@ namespace NCPluginNamespace {
 ////////////////////////////
 
 
-inline double NCPluginNamespace::IofQHelper::calcQIofQIntegral( NeutronEnergy ekin ) const
+inline double NCPluginNamespace::IofQHelper::calcQIofQIntegral( NC::NeutronEnergy ekin ) const
 {
   if ( ekin >= m_ekinMax )
     return m_normFact;
@@ -83,7 +83,7 @@ inline double NCPluginNamespace::IofQHelper::calcQIofQIntegral( NeutronEnergy ek
   return m_pwdist.commulIntegral( twok ) * m_normFact;
 }
 
-inline double NCPluginNamespace::IofQHelper::calcQIofQIntegralMin( NeutronEnergy ekin ) const
+inline double NCPluginNamespace::IofQHelper::calcQIofQIntegralMin( NC::NeutronEnergy ekin ) const
 {
   if ( ekin >= m_ekinMax )
     return m_normFact;
@@ -96,13 +96,13 @@ inline double NCPluginNamespace::IofQHelper::calcQIofQIntegralMin( NeutronEnergy
   return fullInt - lowerInt;
 }
 
-inline double NCPluginNamespace::IofQHelper::sampleQValue( RNG& rng, NeutronEnergy ekin ) const
+inline double NCPluginNamespace::IofQHelper::sampleQValue( NC::RNG& rng, NC::NeutronEnergy ekin ) const
 {
   constexpr double kkk = 4.0 * ekin2ksq(1.0);
   const double twok = std::sqrt( kkk * std::min<double>(m_ekinMax.dbl(),ekin.dbl()) );
   return m_pwdist.sampleBelow( rng, twok );
 }
-inline double NCPluginNamespace::IofQHelper::sampleQValueTrunc( RNG& rng, NeutronEnergy ekin ) const
+inline double NCPluginNamespace::IofQHelper::sampleQValueTrunc( NC::RNG& rng, NC::NeutronEnergy ekin ) const
 {
   constexpr double kkk = 4.0 * ekin2ksq(1.0);
   const double twok = std::sqrt( kkk * std::min<double>(m_ekinMax.dbl(),ekin.dbl()) );
