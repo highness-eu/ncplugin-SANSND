@@ -21,7 +21,7 @@
 #include "NCIofQHelper.hh"
 #include "NCrystal/internal/utils/NCMath.hh"
 
-using NCrystal::ncsquare
+using NCrystal::ncsquare;
 using NCrystal::NeutronEnergy;
 using NCrystal::ekin2ksq;
 using NCrystal::ksq2ekin;
