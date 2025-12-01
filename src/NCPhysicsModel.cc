@@ -17,7 +17,7 @@
 #  define NCPLUGIN_MSG(msg) NCRYSTAL_RAWOUT( "plugin::" NCPLUGIN_NAME_CSTR ": " << msg << '\n' )
 #endif
 
-
+using namespace NCrystal;
 bool NCP::PhysicsModel::isApplicable(const NC::Info &info)
 {
   // Accept if input is NCMAT data with @CUSTOM_SANSND section:
