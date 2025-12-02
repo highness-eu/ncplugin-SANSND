@@ -68,7 +68,6 @@ NCP::PhysicsModel NCP::PhysicsModel::createFromInfo(const NC::Info &info)
       NCRYSTAL_THROW2(BadInput, "FILE MODE selected but no filename is specified for the "
                       << pluginNameUpperCase() << " plugin ");
     }
-
     std::string filename = data.at(2).at(0);
     std::string root_rel = "data/";
     std::string rel_path = root_rel + filename;
@@ -78,8 +77,17 @@ NCP::PhysicsModel NCP::PhysicsModel::createFromInfo(const NC::Info &info)
     if (!(stat(rel_path.c_str(), &buffer) == 0))
       NCRYSTAL_THROW2(BadInput, "The filename specified for the " << pluginNameUpperCase()
                       << " plugin is invalid or the file could not be found in the data/ directory. ");
+    double thetaMin;
+    if (!data.at(3).empty() && NC::safe_str2dbl(data.at(3).at(0), thetaMin)) {
+      nc_assert_always(thetaMin >= 0);
+      if (thetaMin>0){
+        NCPLUGIN_WARN("Theta min is >0. Do not use this in cases where multiple scattering is not negligible, or the geometrical layout not completely certain")
+      }
+    } else {
+      thetaMin=0;
+    }
     Model model = Model::FILE;
-    return PhysicsModel(model, filename);
+    return PhysicsModel(model, filename, thetaMin);
   } else if (data.at(1).at(0) == "PPF") {
     NCPLUGIN_MSG("Mode PPF selected");
     double A1, b1, A2, b2, Q0, corr;
@@ -172,9 +180,9 @@ NCP::PhysicsModel NCP::PhysicsModel::createFromInfo(const NC::Info &info)
   }
 };
 
-NCP::PhysicsModel::PhysicsModel(Model model, std::string filename)
+NCP::PhysicsModel::PhysicsModel(Model model, std::string filename, double thetaMin)
   : m_model(model),
-    m_helper(([model, filename]() -> NCP::IofQHelper
+    m_helper(([model, filename, thetaMin]() -> NCP::IofQHelper
     {
       NC::VectD q;
       NC::VectD IofQ;
@@ -227,10 +235,12 @@ NCP::PhysicsModel::PhysicsModel(Model model, std::string filename)
           //Generate vector of data q and IofQ
           double q_min = std::log10(1e-6);
           int sampling =  std::abs(1-q_min)*10000;
-          q = NC::logspace(q_min,1,sampling);
+          q = NC::logspace(q_min,10,sampling);
           IofQ = q;
+          // double b = 10.3E-05;  // [AA] Ni coherent scattering length
           double b = 6.646E-05;  // [AA] Carbon coherent scattering length
           double n = 0.1771471666666667; // [at/AA^3] <- Diamond atom density
+          // double n = 0.09141139912754012; // [at/AA^3] <- Ni atom density
           double physical_constant = 16*NC::kPi*NC::kPi*std::pow(n*b, 2);  // [1/AA^4]
           std::for_each(IofQ.begin(),IofQ.end(),
                         [Rs,freq,physical_constant](double &x) {
@@ -253,7 +263,7 @@ NCP::PhysicsModel::PhysicsModel(Model model, std::string filename)
           break;
         }
       }
-      NCP::IofQHelper helper(q,IofQ);
+      NCP::IofQHelper helper(q,IofQ,thetaMin);
       return helper;
     })())
 {
@@ -359,10 +369,12 @@ NCP::PhysicsModel::PhysicsModel(Model model, NC::VectD param)
             thetaMin = param.at(1);
             double q_min = std::log10(1e-6);
             int sampling =  std::abs(1-q_min)*10000;
-            q = NC::logspace(q_min,1,sampling);
+            q = NC::logspace(q_min,10,sampling);
             IofQ = q;
             double b = 6.646E-05;  // [AA] Carbon coherent scattering length
+            // double b = 10.3E-05;  // [AA] Ni coherent scattering length
             double n = 0.1771471666666667; // [at/AA^3] <- Diamond atom density
+            // double n = 0.09141139912754012; // [at/AA^3] <- Ni atom density
             double physical_constant = 16*NC::kPi*NC::kPi*std::pow(n*b, 2);  // [1/AA^4]
             std::for_each(IofQ.begin(),IofQ.end(),
                           [mono_R,physical_constant](double &x) {

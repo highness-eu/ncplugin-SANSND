@@ -23,7 +23,7 @@ namespace NCPluginNamespace {
     //Constructor gets the models string and vector of parameters:
     PhysicsModel( Model model, NC::VectD param );
     //Constructor gets the models string and the dist R file or input I(q) file:
-    PhysicsModel( Model model, std::string filename );
+    PhysicsModel( Model model, std::string filename, double thetaMin = 0 );
 
     //Provide cross sections for a given neutron:
     double calcCrossSection( double neutron_ekin ) const;

@@ -36,3 +36,6 @@ build/*
 #Miscellaneous:
 .DS_Store
 vgcore.*
+testcode/data/combined_NiPow109cm_tsx.dat
+testcode/data/test_plugin.ipynb
+testcode/data/data/R_dist

@@ -21,9 +21,10 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include "NCrystal/NCPluginBoilerplate.hh"
 #include "NCrystal/core/NCDefs.hh"
 
-// NVectD is defined in the NCrystal namespace; bring it into the current scope.
+// VectD is defined in the NCrystal namespace; bring it into the current scope.
 using NCrystal::VectD;
 using NCrystal::RNG;
 namespace NCPluginNamespace {
