@@ -39,3 +39,4 @@ vgcore.*
 testcode/data/combined_NiPow109cm_tsx.dat
 testcode/data/test_plugin.ipynb
 testcode/data/data/R_dist
+testcode/data/Ni_sg225_hardsphereSANS_109cm_thetaMIN.ncmat.dat

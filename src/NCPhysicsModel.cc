@@ -237,10 +237,10 @@ NCP::PhysicsModel::PhysicsModel(Model model, std::string filename, double thetaM
           int sampling =  std::abs(1-q_min)*10000;
           q = NC::logspace(q_min,10,sampling);
           IofQ = q;
-          // double b = 10.3E-05;  // [AA] Ni coherent scattering length
-          double b = 6.646E-05;  // [AA] Carbon coherent scattering length
-          double n = 0.1771471666666667; // [at/AA^3] <- Diamond atom density
-          // double n = 0.09141139912754012; // [at/AA^3] <- Ni atom density
+          double b = 10.3E-05;  // [AA] Ni coherent scattering length
+          // double b = 6.646E-05;  // [AA] Carbon coherent scattering length
+          // double n = 0.1771471666666667; // [at/AA^3] <- Diamond atom density
+          double n = 0.09141139912754012; // [at/AA^3] <- Ni atom density
           double physical_constant = 16*NC::kPi*NC::kPi*std::pow(n*b, 2);  // [1/AA^4]
           std::for_each(IofQ.begin(),IofQ.end(),
                         [Rs,freq,physical_constant](double &x) {
@@ -371,10 +371,10 @@ NCP::PhysicsModel::PhysicsModel(Model model, NC::VectD param)
             int sampling =  std::abs(1-q_min)*10000;
             q = NC::logspace(q_min,10,sampling);
             IofQ = q;
-            double b = 6.646E-05;  // [AA] Carbon coherent scattering length
-            // double b = 10.3E-05;  // [AA] Ni coherent scattering length
-            double n = 0.1771471666666667; // [at/AA^3] <- Diamond atom density
-            // double n = 0.09141139912754012; // [at/AA^3] <- Ni atom density
+            // double b = 6.646E-05;  // [AA] Carbon coherent scattering length
+            double b = 10.3E-05;  // [AA] Ni coherent scattering length
+            // double n = 0.1771471666666667; // [at/AA^3] <- Diamond atom density
+            double n = 0.09141139912754012; // [at/AA^3] <- Ni atom density
             double physical_constant = 16*NC::kPi*NC::kPi*std::pow(n*b, 2);  // [1/AA^4]
             std::for_each(IofQ.begin(),IofQ.end(),
                           [mono_R,physical_constant](double &x) {
