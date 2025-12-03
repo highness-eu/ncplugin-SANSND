@@ -20,10 +20,10 @@ namespace NCPluginNamespace {
     static bool isApplicable( const NC::Info& );
     static PhysicsModel createFromInfo( const NC::Info& );//will raise BadInput in case of syntax errors
     enum class Model : unsigned { FILE=0, PPF=1, GPF=2, HSFBA=3 };
-    //Constructor gets the models string and vector of parameters:
-    PhysicsModel( Model model, NC::VectD param );
-    //Constructor gets the models string and the dist R file or input I(q) file:
-    PhysicsModel( Model model, std::string filename, double thetaMin = 0 );
+    //Constructor gets the ncmat info (for atom density and coh scatt. length), models string and vector of parameters:
+    PhysicsModel( const NC::Info &info, Model model, NC::VectD param );
+    //Constructor gets the ncmat info (for atom density and coh scatt. length), models string and the dist R file or input I(q) file:
+    PhysicsModel( const NC::Info &info, Model model, std::string filename, double thetaMin = 0 );
 
     //Provide cross sections for a given neutron:
     double calcCrossSection( double neutron_ekin ) const;

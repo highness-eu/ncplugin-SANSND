@@ -87,7 +87,7 @@ NCP::PhysicsModel NCP::PhysicsModel::createFromInfo(const NC::Info &info)
       thetaMin=0;
     }
     Model model = Model::FILE;
-    return PhysicsModel(model, filename, thetaMin);
+    return PhysicsModel(info, model, filename, thetaMin);
   } else if (data.at(1).at(0) == "PPF") {
     NCPLUGIN_MSG("Mode PPF selected");
     double A1, b1, A2, b2, Q0, corr;
@@ -112,7 +112,7 @@ NCP::PhysicsModel NCP::PhysicsModel::createFromInfo(const NC::Info &info)
     param.insert(param.end(), {A1, b1, A2, b2, Q0, corr});
     Model model = Model::PPF;
     // Parsing done! Create and return our model:
-    return PhysicsModel(model, param);
+    return PhysicsModel(info,model, param);
   } else if (data.at(1).at(0) == "GPF") {
     NCPLUGIN_MSG("Mode GPF selected");
     double A, s, rg, m, p, Qmin, Q1;
@@ -145,7 +145,7 @@ NCP::PhysicsModel NCP::PhysicsModel::createFromInfo(const NC::Info &info)
     param.insert(param.end(), {A, s, rg, m, p, Qmin, Q1});
     Model model = Model::GPF;
     // Parsing done! Create and return our model:
-    return PhysicsModel(model, param);
+    return PhysicsModel(info,model, param);
   } else if (data.at(1).at(0) == "HSFBA") {
     NCPLUGIN_MSG("Mode HSFBA selected");
     Model model = Model::HSFBA;
@@ -159,7 +159,7 @@ NCP::PhysicsModel NCP::PhysicsModel::createFromInfo(const NC::Info &info)
       }
       param.push_back(R);
       param.push_back(thetaMin);
-      return PhysicsModel(model, param);
+      return PhysicsModel(info,model, param);
     } else {
       std::string filename = data.at(2).at(0);
       std::string root_rel = "data/";
@@ -172,7 +172,7 @@ NCP::PhysicsModel NCP::PhysicsModel::createFromInfo(const NC::Info &info)
                         << " plugin is invalid or the file could not be found in the data/ directory. ");
       }
       // CHECK THE INPUT PARAM
-      return PhysicsModel(model, filename);
+      return PhysicsModel(info, model, filename);
     }
   } else {
     NCRYSTAL_THROW2(BadInput, "Invalid model input in the @CUSTOM_" << pluginNameUpperCase()
@@ -180,9 +180,9 @@ NCP::PhysicsModel NCP::PhysicsModel::createFromInfo(const NC::Info &info)
   }
 };
 
-NCP::PhysicsModel::PhysicsModel(Model model, std::string filename, double thetaMin)
+NCP::PhysicsModel::PhysicsModel(const NC::Info& info, Model model, std::string filename, double thetaMin)
   : m_model(model),
-    m_helper(([model, filename, thetaMin]() -> NCP::IofQHelper
+    m_helper(([info, model, filename, thetaMin]() -> NCP::IofQHelper
     {
       NC::VectD q;
       NC::VectD IofQ;
@@ -237,13 +237,18 @@ NCP::PhysicsModel::PhysicsModel(Model model, std::string filename, double thetaM
           int sampling =  std::abs(1-q_min)*10000;
           q = NC::logspace(q_min,10,sampling);
           IofQ = q;
-          double b = 10.3E-05;  // [AA] Ni coherent scattering length
+          // double b = 10.3E-05;  // [AA] Ni coherent scattering length
           // double b = 6.646E-05;  // [AA] Carbon coherent scattering length
           // double n = 0.1771471666666667; // [at/AA^3] <- Diamond atom density
-          double n = 0.09141139912754012; // [at/AA^3] <- Ni atom density
-          double physical_constant = 16*NC::kPi*NC::kPi*std::pow(n*b, 2);  // [1/AA^4]
+          // double n = 0.09141139912754012; // [at/AA^3] <- Ni atom density
+          const double number_density = info.getNumberDensity().dbl();//atoms/Aa^3
+          double avg_coh_scatlen_sqrtbarn = 0.0;//sqrt(barn)=10fm=1e-4 Aa
+          for ( const auto& ce : info.getComposition() )
+            avg_coh_scatlen_sqrtbarn += ce.fraction * ce.atom.data().coherentScatLen();
+          const double coh_scatlen_angstrom = avg_coh_scatlen_sqrtbarn * 1e-4;
+          double physical_constant = 16*NC::kPi*NC::kPi*std::pow(number_density*coh_scatlen_angstrom, 2);  // [1/AA^4]
           std::for_each(IofQ.begin(),IofQ.end(),
-                        [Rs,freq,physical_constant](double &x) {
+                        [Rs,freq,physical_constant,number_density](double &x) {
                           double R, f, osc_term, Nc;
                           double I=0;
                           for (size_t i = 0; i < Rs.size(); ++i)
@@ -254,7 +259,7 @@ NCP::PhysicsModel::PhysicsModel(Model model, std::string filename, double thetaM
                               osc_term = (sin(x*R) - x*R * cos(x*R)) * (sin(x*R) - x*R * cos(x*R));
                               //Determine the number of atoms in a diamon nanoparticle to normalize per-atoms
                               // Nc = V * n = 4/3*pi*R^3 * n
-                              Nc = 0.7420 * R * R * R;
+                              Nc = 1.333333333*NC::kPi * R * R * R * number_density;
                               I += f * osc_term / Nc;
                             }
                           x = physical_constant * std::pow(x, -6) * I * 1e8 ;//# convert to barn
@@ -271,10 +276,10 @@ NCP::PhysicsModel::PhysicsModel(Model model, std::string filename, double thetaM
   // NCPLUGIN_MSG("helper initialized: " << m_helper.has_value());
 };
 
-NCP::PhysicsModel::PhysicsModel(Model model, NC::VectD param)
+NCP::PhysicsModel::PhysicsModel(const NC::Info& info, Model model, NC::VectD param)
   : m_model(model),
     m_param(param),
-    m_helper(([model, param]() -> NCP::IofQHelper
+    m_helper(([info, model, param]() -> NCP::IofQHelper
     {
       NC::VectD q;
       NC::VectD IofQ;
@@ -371,13 +376,14 @@ NCP::PhysicsModel::PhysicsModel(Model model, NC::VectD param)
             int sampling =  std::abs(1-q_min)*10000;
             q = NC::logspace(q_min,10,sampling);
             IofQ = q;
-            // double b = 6.646E-05;  // [AA] Carbon coherent scattering length
-            double b = 10.3E-05;  // [AA] Ni coherent scattering length
-            // double n = 0.1771471666666667; // [at/AA^3] <- Diamond atom density
-            double n = 0.09141139912754012; // [at/AA^3] <- Ni atom density
-            double physical_constant = 16*NC::kPi*NC::kPi*std::pow(n*b, 2);  // [1/AA^4]
+            const double number_density = info.getNumberDensity().dbl();//atoms/Aa^3
+            double avg_coh_scatlen_sqrtbarn = 0.0;//sqrt(barn)=10fm=1e-4 Aa
+            for ( const auto& ce : info.getComposition() )
+              avg_coh_scatlen_sqrtbarn += ce.fraction * ce.atom.data().coherentScatLen();
+            const double coh_scatlen_angstrom = avg_coh_scatlen_sqrtbarn * 1e-4;
+            double physical_constant = 16*NC::kPi*NC::kPi*std::pow(number_density*coh_scatlen_angstrom, 2);  // [1/AA^4]
             std::for_each(IofQ.begin(),IofQ.end(),
-                          [mono_R,physical_constant](double &x) {
+                          [mono_R,physical_constant,number_density](double &x) {
                             double R, osc_term, Nc;
                             double I=0;
                             R = mono_R * 10; // converto to AA
@@ -385,7 +391,7 @@ NCP::PhysicsModel::PhysicsModel(Model model, NC::VectD param)
                             osc_term = (sin(x*R) - x*R * cos(x*R)) * (sin(x*R) - x*R * cos(x*R));
                             //Determine the number of atoms in a diamon nanoparticle to normalize per-atoms
                             // Nc = V * n = 4/3*pi*R^3 * n
-                            Nc = 0.7420 * R * R * R;
+                              Nc = 1.333333333*NC::kPi * R * R * R * number_density;
                             I += std::pow(x, -6) * osc_term / Nc * 1e8;//# convert to barn
                             x = physical_constant* I ;
                           }
